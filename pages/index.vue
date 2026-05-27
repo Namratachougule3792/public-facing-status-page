@@ -1,5 +1,6 @@
 <script setup>
 import { useStatusData } from '~/composables/useStatusData'
+import { computed, ref } from 'vue'
 
 const {
   services,
@@ -10,65 +11,54 @@ const {
   servicesByCategory,
   categoryLabels,
   categoryOrder,
-  addService,
   removeService,
   refresh
 } = useStatusData()
 
-const showAdmin = ref(false)
+const showAdmin    = ref(false)
 const showAddModal = ref(false)
 
 const overallConfig = {
   operational: {
     label: 'All Systems Operational',
-    sub: 'All services are running normally.',
-    bg: 'bg-emerald-500/10 border-emerald-500/20',
-    dot: 'bg-emerald-400',
-    text: 'text-emerald-400'
+    sub:   'All services are running normally.',
+    bg:    'bg-emerald-500/10 border-emerald-500/20',
+    dot:   'bg-emerald-400',
+    text:  'text-emerald-400'
   },
   degraded: {
     label: 'Partial System Degradation',
-    sub: 'Some services are experiencing issues. Our team is actively working on a fix.',
-    bg: 'bg-amber-500/10 border-amber-500/20',
-    dot: 'bg-amber-400',
-    text: 'text-amber-400'
+    sub:   'Some services are experiencing issues.',
+    bg:    'bg-amber-500/10 border-amber-500/20',
+    dot:   'bg-amber-400',
+    text:  'text-amber-400'
   },
   outage: {
     label: 'Major Incident Ongoing',
-    sub: 'We are experiencing a significant disruption. Engineers are working to restore service.',
-    bg: 'bg-red-500/10 border-red-500/20',
-    dot: 'bg-red-400',
-    text: 'text-red-400'
+    sub:   'We are experiencing a significant disruption.',
+    bg:    'bg-red-500/10 border-red-500/20',
+    dot:   'bg-red-400',
+    text:  'text-red-400'
   },
   checking: {
     label: 'Checking System Status',
-    sub: 'Running health checks on all services, please wait.',
-    bg: 'bg-slate-500/10 border-slate-500/20',
-    dot: 'bg-slate-400 animate-pulse',
-    text: 'text-slate-400'
+    sub:   'Running health checks on all services, please wait.',
+    bg:    'bg-slate-500/10 border-slate-500/20',
+    dot:   'bg-slate-400 animate-pulse',
+    text:  'text-slate-400'
   }
 }
 
-const activeIncidents = computed(() =>
-  incidents.value.filter(i => i.status !== 'resolved')
-)
-
-const resolvedIncidents = computed(() =>
-  incidents.value.filter(i => i.status === 'resolved')
-)
+const activeIncidents   = computed(() => incidents.value.filter(i => i.status !== 'resolved'))
+const resolvedIncidents = computed(() => incidents.value.filter(i => i.status === 'resolved'))
 
 const formatLastChecked = (ts) => {
   if (!ts) return ''
   return new Date(ts).toLocaleTimeString('en-US', {
-    hour: '2-digit',
+    hour:   '2-digit',
     minute: '2-digit',
     second: '2-digit'
   })
-}
-
-const handleAdd = async (data) => {
-  await addService(data)
-  showAddModal.value = false
 }
 </script>
 
@@ -122,30 +112,14 @@ const handleAdd = async (data) => {
         <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">
           Services
         </h2>
-        <button
-          @click="showAdmin = !showAdmin"
-          :class="[
-            'text-xs px-3 py-1.5 rounded-lg border transition-colors',
-            showAdmin
-              ? 'bg-blue-600/20 border-blue-500/30 text-blue-400'
-              : 'border-[#1e2433] text-slate-600 hover:text-slate-400 hover:border-slate-600'
-          ]"
-        >
-          {{ showAdmin ? 'Done' : 'Manage Services' }}
-        </button>
-      </div>
-
-      <div v-if="showAdmin" class="mb-4">
-        <button
-          @click="showAddModal = true"
-          class="w-full border border-dashed border-[#1e2433] hover:border-blue-500/30 rounded-lg px-5 py-3 text-sm text-slate-600 hover:text-blue-400 transition-colors"
-        >
-          + Add New Service
-        </button>
+        <div class="flex items-center gap-2 text-xs text-slate-600">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+          Auto-refreshing every 10s
+        </div>
       </div>
 
       <div v-if="loading" class="space-y-2">
-        <div v-for="i in 6" :key="i" class="h-14 bg-[#141824] rounded-lg animate-pulse" />
+        <div v-for="i in 5" :key="i" class="h-14 bg-[#141824] rounded-lg animate-pulse" />
       </div>
 
       <div v-else class="space-y-6">
@@ -162,15 +136,14 @@ const handleAdd = async (data) => {
               v-for="service in servicesByCategory[cat]"
               :key="service.id"
               :service="service"
-              :adminMode="showAdmin"
-              @remove="removeService"
+              :adminMode="false"
             />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Uptime -->
+    <!-- Uptime — Last 90 Days -->
     <div class="mb-10">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">
         Uptime — Last 90 Days
@@ -197,13 +170,6 @@ const handleAdd = async (data) => {
         />
       </div>
     </div>
-
-    <!-- Add Modal -->
-    <AddServiceModal
-      v-if="showAddModal"
-      @close="showAddModal = false"
-      @add="handleAdd"
-    />
 
   </div>
 </template>

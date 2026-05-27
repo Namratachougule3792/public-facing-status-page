@@ -14,15 +14,13 @@
         </div>
       </div>
     </header>
-
     <main class="flex-1">
       <slot />
     </main>
-
     <footer class="border-t border-[#1e2433] mt-16">
       <div class="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-slate-600">
         <span>Kiinara OS Status</span>
-        <span>Updated every 30 seconds</span>
+        <span>Updated every 10 seconds</span>
       </div>
     </footer>
   </div>

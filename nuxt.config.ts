@@ -14,17 +14,7 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
-    preset: 'aws_amplify',
-    // Tell the server bundler not to try to bundle ws — use the installed package
-    externals: {
-      inline: ['ws']
-    }
-  },
-  // Exclude supabase realtime from SSR — it's browser-only in this app
-  vite: {
-    optimizeDeps: {
-      exclude: ['@supabase/realtime-js']
-    }
+    preset: 'aws_amplify'
   },
   compatibilityDate: '2025-01-01'
 })

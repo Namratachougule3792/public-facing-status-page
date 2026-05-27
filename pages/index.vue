@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useStatusData } from '~/composables/useStatusData'
 
@@ -11,16 +11,9 @@ const {
   refresh
 } = useStatusData()
 
-// ---------------------------------------------------------------------------
-// Add Service modal state (UI only — no backend needed, services come from
-// Supabase via dummy app. Modal is kept for visual parity with old design.)
-// ---------------------------------------------------------------------------
 const showAdmin    = ref(false)
 const showAddModal = ref(false)
 
-// ---------------------------------------------------------------------------
-// Group services by category for display
-// ---------------------------------------------------------------------------
 const categoryOrder  = ['infrastructure', 'application', 'communication', 'platform']
 const categoryLabels: Record<string, string> = {
   infrastructure: 'Core Infrastructure',
@@ -43,9 +36,6 @@ const servicesByCategory = computed(() => {
   return map
 })
 
-// ---------------------------------------------------------------------------
-// Overall banner config
-// ---------------------------------------------------------------------------
 const overallConfig: Record<string, any> = {
   operational: {
     label: 'All Systems Operational',
@@ -91,12 +81,9 @@ const formatLastChecked = (ts: string) => {
 <template>
   <div class="max-w-4xl mx-auto px-6 py-12">
 
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Overall Status Banner                                               -->
-    <!-- ------------------------------------------------------------------ -->
+    <!-- Overall Status Banner -->
     <div class="mb-10">
       <div v-if="loading" class="h-24 bg-[#141824] rounded-xl animate-pulse" />
-
       <div
         v-else-if="overallConfig[overall]"
         :class="['border rounded-xl p-6 flex items-start gap-4', overallConfig[overall].bg]"
@@ -121,9 +108,7 @@ const formatLastChecked = (ts: string) => {
       </div>
     </div>
 
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Active Incidents                                                    -->
-    <!-- ------------------------------------------------------------------ -->
+    <!-- Active Incidents -->
     <div v-if="!loading && activeIncidents.length > 0" class="mb-10">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
         Active Incidents
@@ -137,9 +122,7 @@ const formatLastChecked = (ts: string) => {
       </div>
     </div>
 
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Services                                                            -->
-    <!-- ------------------------------------------------------------------ -->
+    <!-- Services -->
     <div class="mb-10">
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">
@@ -158,7 +141,6 @@ const formatLastChecked = (ts: string) => {
         </button>
       </div>
 
-      <!-- Add new service button (shown in admin mode) -->
       <div v-if="showAdmin" class="mb-4">
         <button
           @click="showAddModal = true"
@@ -168,12 +150,10 @@ const formatLastChecked = (ts: string) => {
         </button>
       </div>
 
-      <!-- Loading skeletons -->
       <div v-if="loading" class="space-y-2">
         <div v-for="i in 5" :key="i" class="h-14 bg-[#141824] rounded-lg animate-pulse" />
       </div>
 
-      <!-- Services grouped by category -->
       <div v-else class="space-y-6">
         <div
           v-for="cat in categoryOrder"
@@ -195,9 +175,7 @@ const formatLastChecked = (ts: string) => {
       </div>
     </div>
 
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Uptime — Last 90 Days                                              -->
-    <!-- ------------------------------------------------------------------ -->
+    <!-- Uptime — Last 90 Days -->
     <div class="mb-10">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">
         Uptime — Last 90 Days
@@ -211,9 +189,7 @@ const formatLastChecked = (ts: string) => {
       </div>
     </div>
 
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Incident History                                                    -->
-    <!-- ------------------------------------------------------------------ -->
+    <!-- Incident History -->
     <div v-if="!loading && resolvedIncidents.length > 0">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
         Incident History
@@ -228,19 +204,4 @@ const formatLastChecked = (ts: string) => {
     </div>
 
     <div
-      v-if="!loading && resolvedIncidents.length === 0 && activeIncidents.length === 0"
-      class="mt-4 bg-[#141824] border border-[#1e2433] rounded-xl p-8 text-center"
-    >
-      <p class="text-slate-600 text-sm">No incidents in the past 90 days</p>
-    </div>
-
-    <!-- ------------------------------------------------------------------ -->
-    <!-- Add Service Modal                                                   -->
-    <!-- ------------------------------------------------------------------ -->
-    <AddServiceModal
-      v-if="showAddModal"
-      @close="showAddModal = false"
-    />
-
-  </div>
-</template>
+      v-if="!loading && resolvedIncidents.length === 0 &

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed } from 'vue'
 import { useStatusData } from '~/composables/useStatusData'
 
@@ -14,8 +14,9 @@ const {
 const showAdmin    = ref(false)
 const showAddModal = ref(false)
 
-const categoryOrder  = ['infrastructure', 'application', 'communication', 'platform']
-const categoryLabels: Record<string, string> = {
+const categoryOrder = ['infrastructure', 'application', 'communication', 'platform']
+
+const categoryLabels = {
   infrastructure: 'Core Infrastructure',
   application:    'Application Services',
   communication:  'Communication',
@@ -23,20 +24,20 @@ const categoryLabels: Record<string, string> = {
 }
 
 const servicesByCategory = computed(() => {
-  const map: Record<string, any[]> = {
+  const map = {
     infrastructure: [],
     application:    [],
     communication:  [],
     platform:       []
   }
-  services.value.forEach((s: any) => {
+  services.value.forEach((s) => {
     if (map[s.category]) map[s.category].push(s)
     else map['application'].push(s)
   })
   return map
 })
 
-const overallConfig: Record<string, any> = {
+const overallConfig = {
   operational: {
     label: 'All Systems Operational',
     sub:   'All services are running normally.',
@@ -67,10 +68,10 @@ const overallConfig: Record<string, any> = {
   }
 }
 
-const activeIncidents   = computed(() => incidents.value.filter((i: any) => i.status !== 'resolved'))
-const resolvedIncidents = computed(() => incidents.value.filter((i: any) => i.status === 'resolved'))
+const activeIncidents   = computed(() => incidents.value.filter((i) => i.status !== 'resolved'))
+const resolvedIncidents = computed(() => incidents.value.filter((i) => i.status === 'resolved'))
 
-const formatLastChecked = (ts: string) => {
+const formatLastChecked = (ts) => {
   if (!ts) return ''
   return new Date(ts).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -158,7 +159,7 @@ const formatLastChecked = (ts: string) => {
         <div
           v-for="cat in categoryOrder"
           :key="cat"
-          v-show="servicesByCategory[cat]?.length > 0"
+          v-show="servicesByCategory[cat] && servicesByCategory[cat].length > 0"
         >
           <p class="text-xs text-slate-700 uppercase tracking-widest mb-2 px-1">
             {{ categoryLabels[cat] }}
@@ -204,4 +205,17 @@ const formatLastChecked = (ts: string) => {
     </div>
 
     <div
-      v-if="!loading && resolvedIncidents.length === 0 &
+      v-if="!loading && resolvedIncidents.length === 0 && activeIncidents.length === 0"
+      class="mt-4 bg-[#141824] border border-[#1e2433] rounded-xl p-8 text-center"
+    >
+      <p class="text-slate-600 text-sm">No incidents in the past 90 days</p>
+    </div>
+
+    <!-- Add Service Modal -->
+    <AddServiceModal
+      v-if="showAddModal"
+      @close="showAddModal = false"
+    />
+
+  </div>
+</template>

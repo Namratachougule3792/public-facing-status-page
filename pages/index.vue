@@ -1,24 +1,52 @@
 <script setup>
+import { ref, computed } from 'vue'
 import { useStatusData } from '~/composables/useStatusData'
-import { computed, ref } from 'vue'
 
 const {
   services,
-  incidents,
   overall,
+  incidents,
   loading,
   lastChecked,
-  servicesByCategory,
-  categoryLabels,
-  categoryOrder,
-  removeService,
   refresh
 } = useStatusData()
 
+// ---------------------------------------------------------------------------
+// Add Service modal state (UI only — no backend needed, services come from
+// Supabase via dummy app. Modal is kept for visual parity with old design.)
+// ---------------------------------------------------------------------------
 const showAdmin    = ref(false)
 const showAddModal = ref(false)
 
-const overallConfig = {
+// ---------------------------------------------------------------------------
+// Group services by category for display
+// ---------------------------------------------------------------------------
+const categoryOrder  = ['infrastructure', 'application', 'communication', 'platform']
+const categoryLabels: Record<string, string> = {
+  infrastructure: 'Core Infrastructure',
+  application:    'Application Services',
+  communication:  'Communication',
+  platform:       'Platform'
+}
+
+const servicesByCategory = computed(() => {
+  const map: Record<string, any[]> = {
+    infrastructure: [],
+    application:    [],
+    communication:  [],
+    platform:       []
+  }
+  services.value.forEach((s: any) => {
+    if (map[s.category]) map[s.category].push(s)
+    else map['application'].push(s)
+  })
+  return map
+})
+
+// ---------------------------------------------------------------------------
+// Overall banner config
+// ---------------------------------------------------------------------------
+const overallConfig: Record<string, any> = {
   operational: {
     label: 'All Systems Operational',
     sub:   'All services are running normally.',
@@ -28,16 +56,16 @@ const overallConfig = {
   },
   degraded: {
     label: 'Partial System Degradation',
-    sub:   'Some services are experiencing issues.',
+    sub:   'Some services are experiencing issues. Our team is actively working on a fix.',
     bg:    'bg-amber-500/10 border-amber-500/20',
     dot:   'bg-amber-400',
     text:  'text-amber-400'
   },
   outage: {
     label: 'Major Incident Ongoing',
-    sub:   'We are experiencing a significant disruption.',
+    sub:   'We are experiencing a significant disruption. Engineers are working to restore service.',
     bg:    'bg-red-500/10 border-red-500/20',
-    dot:   'bg-red-400',
+    dot:   'bg-red-400 animate-pulse',
     text:  'text-red-400'
   },
   checking: {
@@ -49,15 +77,13 @@ const overallConfig = {
   }
 }
 
-const activeIncidents   = computed(() => incidents.value.filter(i => i.status !== 'resolved'))
-const resolvedIncidents = computed(() => incidents.value.filter(i => i.status === 'resolved'))
+const activeIncidents   = computed(() => incidents.value.filter((i: any) => i.status !== 'resolved'))
+const resolvedIncidents = computed(() => incidents.value.filter((i: any) => i.status === 'resolved'))
 
-const formatLastChecked = (ts) => {
+const formatLastChecked = (ts: string) => {
   if (!ts) return ''
   return new Date(ts).toLocaleTimeString('en-US', {
-    hour:   '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
   })
 }
 </script>
@@ -65,10 +91,14 @@ const formatLastChecked = (ts) => {
 <template>
   <div class="max-w-4xl mx-auto px-6 py-12">
 
-    <!-- Overall Status Banner -->
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Overall Status Banner                                               -->
+    <!-- ------------------------------------------------------------------ -->
     <div class="mb-10">
+      <div v-if="loading" class="h-24 bg-[#141824] rounded-xl animate-pulse" />
+
       <div
-        v-if="!loading && overallConfig[overall]"
+        v-else-if="overallConfig[overall]"
         :class="['border rounded-xl p-6 flex items-start gap-4', overallConfig[overall].bg]"
       >
         <div :class="['w-3 h-3 rounded-full mt-1 shrink-0', overallConfig[overall].dot]" />
@@ -89,11 +119,12 @@ const formatLastChecked = (ts) => {
           </button>
         </div>
       </div>
-      <div v-if="loading" class="h-24 bg-[#141824] rounded-xl animate-pulse" />
     </div>
 
-    <!-- Active Incidents -->
-    <div v-if="activeIncidents.length > 0" class="mb-10">
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Active Incidents                                                    -->
+    <!-- ------------------------------------------------------------------ -->
+    <div v-if="!loading && activeIncidents.length > 0" class="mb-10">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
         Active Incidents
       </h2>
@@ -106,22 +137,43 @@ const formatLastChecked = (ts) => {
       </div>
     </div>
 
-    <!-- Services -->
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Services                                                            -->
+    <!-- ------------------------------------------------------------------ -->
     <div class="mb-10">
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest">
           Services
         </h2>
-        <div class="flex items-center gap-2 text-xs text-slate-600">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
-          Auto-refreshing every 10s
-        </div>
+        <button
+          @click="showAdmin = !showAdmin"
+          :class="[
+            'text-xs px-3 py-1.5 rounded-lg border transition-colors',
+            showAdmin
+              ? 'bg-blue-600/20 border-blue-500/30 text-blue-400'
+              : 'border-[#1e2433] text-slate-600 hover:text-slate-400 hover:border-slate-600'
+          ]"
+        >
+          {{ showAdmin ? 'Done' : 'Manage Services' }}
+        </button>
       </div>
 
+      <!-- Add new service button (shown in admin mode) -->
+      <div v-if="showAdmin" class="mb-4">
+        <button
+          @click="showAddModal = true"
+          class="w-full border border-dashed border-[#1e2433] hover:border-blue-500/30 rounded-lg px-5 py-3 text-sm text-slate-600 hover:text-blue-400 transition-colors"
+        >
+          + Add New Service
+        </button>
+      </div>
+
+      <!-- Loading skeletons -->
       <div v-if="loading" class="space-y-2">
         <div v-for="i in 5" :key="i" class="h-14 bg-[#141824] rounded-lg animate-pulse" />
       </div>
 
+      <!-- Services grouped by category -->
       <div v-else class="space-y-6">
         <div
           v-for="cat in categoryOrder"
@@ -136,14 +188,16 @@ const formatLastChecked = (ts) => {
               v-for="service in servicesByCategory[cat]"
               :key="service.id"
               :service="service"
-              :adminMode="false"
+              :adminMode="showAdmin"
             />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Uptime — Last 90 Days -->
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Uptime — Last 90 Days                                              -->
+    <!-- ------------------------------------------------------------------ -->
     <div class="mb-10">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">
         Uptime — Last 90 Days
@@ -157,8 +211,10 @@ const formatLastChecked = (ts) => {
       </div>
     </div>
 
-    <!-- Incident History -->
-    <div v-if="resolvedIncidents.length > 0">
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Incident History                                                    -->
+    <!-- ------------------------------------------------------------------ -->
+    <div v-if="!loading && resolvedIncidents.length > 0">
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
         Incident History
       </h2>
@@ -170,6 +226,21 @@ const formatLastChecked = (ts) => {
         />
       </div>
     </div>
+
+    <div
+      v-if="!loading && resolvedIncidents.length === 0 && activeIncidents.length === 0"
+      class="mt-4 bg-[#141824] border border-[#1e2433] rounded-xl p-8 text-center"
+    >
+      <p class="text-slate-600 text-sm">No incidents in the past 90 days</p>
+    </div>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Add Service Modal                                                   -->
+    <!-- ------------------------------------------------------------------ -->
+    <AddServiceModal
+      v-if="showAddModal"
+      @close="showAddModal = false"
+    />
 
   </div>
 </template>

@@ -1,5 +1,9 @@
 <script setup>
+<<<<<<< HEAD
 import { ref, computed } from 'vue'
+=======
+import { computed } from 'vue'
+>>>>>>> 92f235f (changes added)
 import { useStatusData } from '~/composables/useStatusData'
 
 const {
@@ -8,6 +12,7 @@ const {
   incidents,
   loading,
   lastChecked,
+<<<<<<< HEAD
   refresh
 } = useStatusData()
 
@@ -37,6 +42,15 @@ const servicesByCategory = computed(() => {
   return map
 })
 
+=======
+  error,
+  servicesByCategory,
+  categoryLabels,
+  categoryOrder,
+  refresh
+} = useStatusData()
+
+>>>>>>> 92f235f (changes added)
 const overallConfig = {
   operational: {
     label: 'All Systems Operational',
@@ -71,7 +85,7 @@ const overallConfig = {
 const activeIncidents   = computed(() => incidents.value.filter((i) => i.status !== 'resolved'))
 const resolvedIncidents = computed(() => incidents.value.filter((i) => i.status === 'resolved'))
 
-const formatLastChecked = (ts) => {
+const formatTime = (ts) => {
   if (!ts) return ''
   return new Date(ts).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -81,6 +95,12 @@ const formatLastChecked = (ts) => {
 
 <template>
   <div class="max-w-4xl mx-auto px-6 py-12">
+
+    <!-- Error banner (only shows if Supabase call fails) -->
+    <div v-if="error" class="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+      <p class="text-red-400 text-sm font-medium">Supabase connection error: {{ error }}</p>
+      <p class="text-red-400/60 text-xs mt-1">Check your SUPABASE_URL and SUPABASE_ANON_KEY environment variables.</p>
+    </div>
 
     <!-- Overall Status Banner -->
     <div class="mb-10">
@@ -98,12 +118,12 @@ const formatLastChecked = (ts) => {
         </div>
         <div class="text-right shrink-0">
           <p class="text-xs text-slate-600">Last checked</p>
-          <p class="text-xs text-slate-500 mt-0.5">{{ formatLastChecked(lastChecked) }}</p>
+          <p class="text-xs text-slate-500 mt-0.5">{{ formatTime(lastChecked) }}</p>
           <button
             @click="refresh"
-            class="text-xs text-slate-600 hover:text-slate-400 mt-1 transition-colors"
+            class="text-xs text-slate-600 hover:text-slate-400 mt-1 transition-colors underline"
           >
-            Refresh
+            Refresh now
           </button>
         </div>
       </div>
@@ -151,10 +171,12 @@ const formatLastChecked = (ts) => {
         </button>
       </div>
 
+      <!-- Loading skeletons -->
       <div v-if="loading" class="space-y-2">
         <div v-for="i in 5" :key="i" class="h-14 bg-[#141824] rounded-lg animate-pulse" />
       </div>
 
+      <!-- Service list -->
       <div v-else class="space-y-6">
         <div
           v-for="cat in categoryOrder"
@@ -181,7 +203,10 @@ const formatLastChecked = (ts) => {
       <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">
         Uptime — Last 90 Days
       </h2>
-      <div v-if="!loading" class="space-y-6">
+      <div v-if="loading" class="space-y-6">
+        <div v-for="i in 5" :key="i" class="h-16 bg-[#141824] rounded-lg animate-pulse" />
+      </div>
+      <div v-else class="space-y-6">
         <UptimeBar
           v-for="service in services"
           :key="service.id"
@@ -204,6 +229,7 @@ const formatLastChecked = (ts) => {
       </div>
     </div>
 
+<<<<<<< HEAD
     <div
       v-if="!loading && resolvedIncidents.length === 0 && activeIncidents.length === 0"
       class="mt-4 bg-[#141824] border border-[#1e2433] rounded-xl p-8 text-center"
@@ -217,5 +243,17 @@ const formatLastChecked = (ts) => {
       @close="showAddModal = false"
     />
 
+=======
+    <!-- No incidents message -->
+    <div v-if="!loading && resolvedIncidents.length === 0 && activeIncidents.length === 0">
+      <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
+        Incident History
+      </h2>
+      <div class="bg-[#141824] border border-[#1e2433] rounded-xl p-8 text-center text-slate-600 text-sm">
+        No incidents in the past 7 days.
+      </div>
+    </div>
+
+>>>>>>> 92f235f (changes added)
   </div>
 </template>
